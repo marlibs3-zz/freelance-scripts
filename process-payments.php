@@ -1,19 +1,9 @@
 <?php
-/*
-CSV Format:
-|00000000000000000|02|19|CVV2: 402|City: NY | State: NY| First Name: eyal|
-Last Name: azulay|PayPal email: mail@yahoo.com| phone: 00112312312323|
-address:BL bl |zip: 4643402|USA
+  // WePay PHP SDK - http://git.io/mY7iQQ
+  //require 'wepay.php';
 
-Spec:
-Customers' credit card details are recorded (offline), by entering card
-details into a spreadsheet.
-These customers should be charged a monthly fee, but this is currently a
-manual process and is quite laborious.
-The Client would like a PHP script which will take in a specified CSV file
-(containing one line per customer / credit card detail), and charge each
-customer the monthly fee using the WePay API.
-*/
+  $wePayID    = 123456789;
+  $wePayToken  = "STAGE_8a19aff55b85a436dad5cd1386db1999437facb5914b494f4da5f206a56a5d20";
 
   // First we create the variable cardsString and we put the data from the csv
   // file in it
@@ -22,8 +12,23 @@ customer the monthly fee using the WePay API.
   $cardsArray = explode("\n", $cardsString);
   // We loop through the array
   foreach ($cardsArray as $card) {
-    // We output each item in a new line
     // We split each card into its pieces of information
     $item = explode("|", $card);
-    echo "$item[6] \n";
+    // We create am array from the items above
+    $cardDataArray = [
+      "client_id" => $wePayID,
+      "user_name" => $item[6]." ".$item[7],
+      "email" => $item[8],
+      "cc_number" => $item[0],
+      "cvv" => $item[3],
+      "expiration_month" => $item[1],
+      "expiration_year" => $item[2],
+      "address" => [
+         "country" => $item[12],
+         "postal_code" => $item[11]
+      ]
+    ];
+    // We encode the cardDataArray as a JSON string
+    $cardDataArrayJSON = json_encode($cardDataArray, JSON_PRETTY_PRINT);
+    echo "$cardDataArrayJSON \n";
   }
