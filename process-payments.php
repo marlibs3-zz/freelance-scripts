@@ -1,6 +1,6 @@
 <?php
   // WePay PHP SDK - http://git.io/mY7iQQ
-  //require 'wepay.php';
+  // require 'wepay.php';
 
   $wePayID    = 123456789;
   $wePayToken  = "STAGE_8a19aff55b85a436dad5cd1386db1999437facb5914b494f4da5f206a56a5d20";
@@ -30,5 +30,17 @@
     ];
     // We encode the cardDataArray as a JSON string
     $cardDataArrayJSON = json_encode($cardDataArray, JSON_PRETTY_PRINT);
-    echo "$cardDataArrayJSON \n";
+    // We make a post request to WePay API using curl
+    $curlSession = curl_init("https://wepayapi.com/v2/credit_card/create");
+    curl_setopt($curlSession, CURLOPT_CUSTOMREQUEST, "POST");
+    curl_setopt($curlSession, CURLOPT_POSTFIELDS, $cardDataArrayJSON);
+    curl_setopt($curlSession, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($curlSession, CURLOPT_HTTPHEADER, array(
+        'Content-Type: application/json',
+        'Content-Length: ' . strlen($cardDataArrayJSON)
+      )
+    );
+    $result = curl_exec($curlSession);
+    echo "$result \n";
   }
+  
