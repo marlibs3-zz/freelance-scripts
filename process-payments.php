@@ -50,8 +50,7 @@ foreach ($cardsArray as $card) {
   );
   // We execute the curl request
   $creditCardCreateResponseJSON = curl_exec($curlSession);
-  // For testing purposes we hardcode a success response from WePay
-  $creditCardCreateResponseJSON = '{"credit_card_id": 235810395803, "state": "new"}';
+  
   // We convert the JSON string into a PHP array
   $creditCardCreateResponseArray = json_decode($creditCardCreateResponseJSON, true);
 
