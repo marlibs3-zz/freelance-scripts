@@ -1,18 +1,20 @@
 <?php
-// WePay PHP SDK - http://git.io/mY7iQQ
-require 'PHP-SDK/wepay.php';
+$customerCardsFile     = './customer-cards.csv';
 
-$wePayAccountID        = 1871946093;
-$wePayAccessToken      = "PRODUCTION_12d9167f273a60d9c2a4210acf467116f604474f8654fc1006d8cbc29402a6a7";
+$wePayAccountID        = 123456789;
+$wePayAccessToken      = "wePayAccessToken";
 $wePayClientID         = 123456789;
-$wePayClientSecret     = "Shhhhhh";
+$wePayClientSecret     = "wePayClientSecret";
+
 $amountPayable         = 1;
 $currency              = "GBP";
-$description           = "A lovely service";
+$description           = "Service Description";
+
+echo "Processing customer cards from file: {$customerCardsFile} to charge amount: $amountPayable $currency \n";
 
 // First we create the variable cardsString and we put the data from the csv
 // file in it
-$cardsString = file_get_contents('./customer-cards.csv');
+$cardsString = file_get_contents($customerCardsFile);
 // Then we create a variable in which the cardsString is split by new lines
 $cardsArray = explode("\n", $cardsString);
 // We loop through the array
@@ -52,13 +54,8 @@ foreach ($cardsArray as $card) {
   $creditCardCreateResponseJSON = '{"credit_card_id": 235810395803, "state": "new"}';
   // We convert the JSON string into a PHP array
   $creditCardCreateResponseArray = json_decode($creditCardCreateResponseJSON, true);
-  // This configures WePay to make a real (not test) API call
-  Wepay::useProduction($wePayClientID, $wePayClientSecret);
-  // We obtain a WePay object instance from the WePay class, passing the
-  // access token to the constructor
-  $wepay = new WePay($wePayAccessToken);
-  // We make an API request to charge the card
-  $response = $wepay->request('checkout/create', array(
+
+  $transactionRequestData = array(
     'account_id'          => $wePayAccountID,
     'amount'              => $amountPayable,
     'currency'            => $currency,
@@ -70,7 +67,25 @@ foreach ($cardsArray as $card) {
         'id'          => $creditCardCreateResponseArray['credit_card_id']
       )
     )
-  ));
+  );
 
-  print_r($response);
+  // We encode the transactionRequestData as a JSON string
+  $transactionRequestDataJSON = json_encode($transactionRequestData);
+  // We make a post request to WePay API using curl
+  $curlSession = curl_init("https://wepayapi.com/v2/checkout/create");
+  curl_setopt($curlSession, CURLOPT_CUSTOMREQUEST, "POST");
+  curl_setopt($curlSession, CURLOPT_POSTFIELDS, $transactionRequestDataJSON);
+  curl_setopt($curlSession, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($curlSession, CURLOPT_HTTPHEADER,
+    array(
+      'Content-Type: application/json',
+      'Content-Length: ' . strlen($transactionRequestDataJSON)
+    )
+  );
+  // We execute the curl request
+  $checkoutCreateResponseJSON = curl_exec($curlSession);
+  // We convert the JSON string into a PHP array
+  $checkoutCreateResponseArray = json_decode($checkoutCreateResponseJSON, true);
+
+  echo "WePay Checkout ID: {$checkoutCreateResponseArray['checkout_id']} / State: {$checkoutCreateResponseArray['state']} \n";
 }
